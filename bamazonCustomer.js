@@ -37,10 +37,49 @@ function makePurchase() {
                         return productArr;
                     },
                     message: "Choose what product you wish to purchase (by ID)."
+                }, {
+                    name: "units",
+                    type: "input",
+                    message: "How many units would you like to purchase?"
                 }
             ])
             .then(function (answer) {
-                console.log(answer.purchase);
+                var choice;
+                for (var i = 0; i < response.length; i++) {
+                    // response[i].ID.tostring();
+                    if (response[i].ID == answer.purchase) {
+                        choice = response[i];
+                        console.log(choice);
+                    }
+                }
+                
+
+                if (choice.stock_quantity > answer.units) {
+                    con.query("UPDATE products SET ? WHERE ?",
+                        [
+                            {
+                                stock_quantity: choice.stock_quantity - answer.units
+                            },
+                            {
+                                ID: choice.ID
+                            }
+                        ], function(err) {
+                            if(err) throw err
+                        }
+                    )
+                    con.query("SELECT * FROM products WHERE price = " + choice.price, function(err) {
+                        if(err) throw err;
+                        var finalPrice = choice.price * answer.units;
+                        console.log(finalPrice);
+                        console.log("Thank you for your purchase!")
+                        con.end();
+                    })
+                }
+                else {
+                    console.log("Insufficient quantity!")
+                    makePurchase();
+                    return
+                };
             })
     })
 }
